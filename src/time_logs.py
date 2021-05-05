@@ -1,5 +1,5 @@
 """
-### Authors: Dennis Brown, Shannon McDade, Jacob Parmer
+### Author: Jacob Parmer
 ###
 ### Created: Mar 21, 2021
 """

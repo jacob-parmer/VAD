@@ -11,6 +11,9 @@ __pycache__/
 *.txt.utf-8
 *.flac
 
+# Python Cache Files
+*.pyc
+
 # Distribution / packaging
 .Python
 build/

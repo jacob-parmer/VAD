@@ -1,5 +1,5 @@
 """
-### Authors: Dennis Brown, Shannon McDade, Jacob Parmer
+### Author: Jacob Parmer
 ###
 ### Created: Mar 31, 2021
 """
@@ -18,6 +18,18 @@ class Signal:
     def __init__(self, waveform, sample_rate):
         self.waveform = waveform
         self.sample_rate = sample_rate
+        return
+
+    def split_into_frames(self, frame_size=1024):
+        
+        tot_length = self.waveform.size(1)
+        pad_size = (frame_size - (tot_length % frame_size)) - 1 # For some reason functional.pad adds pad_size+1, so -1 here (hacky solution, fix later?)
+
+        if pad_size != -1:
+            pad = (1,pad_size) 
+            padded_waveform = torch.nn.functional.pad(self.waveform, pad, "constant", 0)
+
+        self.waveform = torch.reshape(padded_waveform, (-1, frame_size))
         return
 
     # ------------------------- FEATURE EXTRACTIONS --------------------------- #
