@@ -1,5 +1,5 @@
 """
-### Authors: Dennis Brown, Shannon McDade, Jacob Parmer
+### Author: Jacob Parmer
 ###
 ### Created: Mar 20, 2021
 """
@@ -7,8 +7,8 @@
 from src.signals import Signal
 from src.display import Display
 from src.model import RNN
-from src.data import LibriSpeech
 from src.time_logs import TimerLog
+from src.data import LibriSpeech, get_features, build_librispeech
 
 import torch
 from torch import nn
@@ -27,35 +27,7 @@ def timed_print(*args):
     for arg in args:
         print_str += str(arg) + " "
 
-    _print(f"{stopwatch.get_elapsed()}\t| {print_str}")
-
-def get_features(dataset):
-
-    timer = TimerLog()
-
-    if args.verbose:
-        print("Starting Feature Extraction...")
-
-    dataset_size = len(dataset)
-    features = torch.empty(0)
-    for i, data in enumerate(dataset):
-        sig = Signal(data[0], data[1])
-        sig_features = sig.get_mfilterbank().unsqueeze_(-1).transpose(2,0)
-        #sig_features = sig_features.transpose(1,2)
-                        
-        features = torch.cat((features, sig_features), 0)
-
-        if args.verbose:
-            print(f"#{i}/{dataset_size}")
-            sig.print_stats()
-
-        if i == 3:
-            break
-
-    if args.verbose:
-        print(f"Finished Feature Extraction. Total Time Elapsed: {timer.get_elapsed()}")
-
-    return features
+    _print(f"{stopwatch.get_elapsed():.6f}\t| {print_str}")
 
 # ---------- MAIN PROGRAM EXECUTION ----------- #
 def main(args):
@@ -63,67 +35,47 @@ def main(args):
     if args.timed:
         builtins.print = timed_print
 
+    librispeech = build_librispeech(verbose=args.verbose)
+    
+    # ----- TRAIN ----- #
     if args.mode == "training":
         if args.verbose:
             print("Beginning VAD model training...")
             print("-------------------------------")
 
-        train_clean_100 = LibriSpeech(
-                            root=os.getcwd(),
-                            url="train-clean-100",
-                            folder_in_archive="LibriSpeech",
-                            download=True
-                        )
+        features = get_features(librispeech["train-clean-100"].dataset, device=args.device)
 
-        features = get_features(train_clean_100.dataset)
-        model = RNN(input_size=len(features[0][0]),
+        model = RNN(input_size=features.size(2),
                     output_size=1,
-                    hidden_dim=12, 
+                    hidden_dim=2, 
                     n_layers=1, 
+                    device=args.device,
                     verbose=args.verbose
                     )
 
-        criterion = nn.CrossEntropyLoss()
-        optimizer = torch.optim.Adam(model.parameters(), lr=args.lrate)
+        y = list()
+        model.train(features, y, epochs=args.epochs, lrate=args.lrate, verbose=args.verbose)          
 
-        for epoch in range(1, args.epochs+1):
-            optimizer.zero_grad()
 
+    # ----- TEST ----- #
     elif args.mode == "testing":
         if args.verbose:
             print("Beginning VAD model testing...")
             print("------------------------------")
 
-        test_clean = LibriSpeech(
-                        root=os.getcwd(),
-                        url="test-clean",
-                        folder_in_archive="LibriSpeech",
-                        download=True
-                    )
+        features = get_features(librispeech["test_clean"].dataset, device=args.device)
 
-        breakpoint()
-
-        features = get_features(test_clean.dataset)
-        model = RNN(input_size=len(features[0][0]),
+        model = RNN(input_size=features.size(2),
                     output_size=1,
-                    hidden_dim=12,
+                    hidden_dim=2,
                     n_layers=1,
+                    device=args.device,
                     verbose=args.verbose
                     )
 
-        criterion = nn.CrossEntropyLoss()
-        optimizer = torch.optim.Adam(model.parameters(), lr=args.lrate)
 
-        for epoch in range(1, args.epochs+1):
-            optimizer.zero_grad()
-            features.to(model.device)
-            output, hidden = model(features)
-
-
-
-            
     else:
-        raise ValueError("Invalid mode selected. Please use CLI parameter '-m training' or '-m testing'.")
+        raise ValueError("Invalid mode selected. Please use CLI parameter '-m training' or '-m testing'")
     return
 
 
@@ -132,8 +84,9 @@ if __name__ == "__main__":
     parser.add_argument("--verbose", "-v", action="store_true", help="Display debugging logs")
     parser.add_argument("--timed", "-t", action="store_true", help="Display execution time in debugging logs")
     parser.add_argument("--mode", "-m",  help="Set program to training or testing mode")
-    parser.add_argument("--lrate", "-l", default=0.01, help="Set learning rate for model")
-    parser.add_argument("--epochs", "-e", default=100, help="Set number of epochs for model training")
+    parser.add_argument("--lrate", "-l", default=0.01, type=float, help="Set learning rate for model")
+    parser.add_argument("--epochs", "-e", default=100, type=int, help="Set number of epochs for model training")
+    parser.add_argument("--device", "-d", default='cuda' if torch.cuda.is_available() else 'cpu', help="Set program to run on CPU or GPU")
     args = parser.parse_args()
 
     main(args)
