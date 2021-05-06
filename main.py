@@ -8,7 +8,7 @@ from src.signals import Signal
 from src.display import Display
 from src.model import RNN
 from src.time_logs import TimerLog
-from src.data import LibriSpeech, get_features, build_librispeech
+from src.data import LibriSpeech, build_librispeech
 
 import torch
 from torch import nn
@@ -16,6 +16,8 @@ from torch import nn
 import argparse
 import os
 import builtins
+
+from pudb import set_trace
 
 # Displays time in program before every print statement.
 _print = print
@@ -43,9 +45,9 @@ def main(args):
             print("Beginning VAD model training...")
             print("-------------------------------")
 
-        features = get_features(librispeech["train-clean-100"].dataset, device=args.device)
+        X = librispeech["dev-clean"].get_features(device=args.device, verbose=args.verbose)
 
-        model = RNN(input_size=features.size(2),
+        model = RNN(input_size=X[0].size(2),
                     output_size=1,
                     hidden_dim=2, 
                     n_layers=1, 
@@ -53,9 +55,8 @@ def main(args):
                     verbose=args.verbose
                     )
 
-        y = list()
-        model.train(features, y, epochs=args.epochs, lrate=args.lrate, verbose=args.verbose)          
-
+        y = librispeech["dev-clean"].get_labels("dev-clean", verbose=args.verbose)
+        model.train(X, y, epochs=args.epochs, lrate=args.lrate, verbose=args.verbose)          
 
     # ----- TEST ----- #
     elif args.mode == "testing":

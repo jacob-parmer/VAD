@@ -53,15 +53,15 @@ class RNN(nn.Module):
         criterion = nn.CrossEntropyLoss()
         optimizer = torch.optim.Adam(self.parameters(), lr=lrate)
         
-        target_seq = torch.zeros(64064)
-        
         for epoch in range(1, epochs+1):
-            optimizer.zero_grad()
-            output, hidden = self(X)
-            target_seq = target_seq.to(self.device)
-            loss = criterion(output, target_seq.view(-1).long())
-            loss.backward()
-            optimizer.step()
+            for i in range(len(X)):
+                target_seq = y[i]
+                optimizer.zero_grad()
+                output, hidden = self(X[i])
+                target_seq = target_seq.to(self.device)
+                loss = criterion(output, target_seq.view(-1).long())
+                loss.backward()
+                optimizer.step()
 
             if verbose and epoch%10 == 0:
                 print(f"epoch: {epoch}/{epochs}")
