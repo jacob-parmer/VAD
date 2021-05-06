@@ -33,11 +33,12 @@ class Signal:
         return
 
     # ------------------------- FEATURE EXTRACTIONS --------------------------- #
-    def get_MFCC(self, n_fft=1024, win_length=None, hop_length=512, n_mels=128, n_mfcc=128, verbose=False):
+    def get_MFCC(self, n_fft=256, win_length=None, hop_length=512, n_mels=160, n_mfcc=160, verbose=False):
         mfcc_transform = T.MFCC(sample_rate=self.sample_rate,
                                 n_mfcc=n_mfcc,
                                 melkwargs={'n_fft':n_fft, 'n_mels':n_mels, 'hop_length':hop_length}
                                 )
+
         mfcc = mfcc_transform(self.waveform)
 
         if verbose:
