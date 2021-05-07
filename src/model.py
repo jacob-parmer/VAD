@@ -10,6 +10,8 @@ from torch.utils.data import DataLoader
 
 import numpy as np
 
+from src.time_logs import TimerLog
+
 class RNN(nn.Module):
 
     def __init__(self, input_size, output_size, hidden_dim, n_layers, device, verbose=False):
@@ -50,6 +52,11 @@ class RNN(nn.Module):
 
     def train(self, X, y, epochs=100, lrate=0.01, verbose=False):
 
+        timer = TimerLog()
+
+        if verbose:
+            print(f"Starting training for {epochs} epochs...")
+
         criterion = nn.CrossEntropyLoss()
         optimizer = torch.optim.Adam(self.parameters(), lr=lrate)
         
@@ -63,12 +70,15 @@ class RNN(nn.Module):
                 loss.backward()
                 optimizer.step()
 
-            if verbose and epoch%10 == 0:
+            if verbose:
                 print(f"epoch: {epoch}/{epochs}")
                 print(f"Loss: {loss.item():.5}")
 
         for line in output:
             np_line = line.detach().numpy()
             print(np.argmax(np_line, axis=0))
+
+        if verbose:
+            print(f"Finished model training in {timer.get_elapsed()} seconds.")
 
         return
