@@ -19,6 +19,8 @@ import builtins
 
 from pudb import set_trace
 
+FRAMES = 30
+
 # Displays time in program before every print statement.
 _print = print
 stopwatch = TimerLog()
@@ -48,9 +50,8 @@ def main(args):
         X = librispeech["dev-clean"].get_features(device=args.device, verbose=args.verbose)
 
         model = RNN(input_size=X[0].size(2),
-                    output_size=1,
-                    hidden_dim=2, 
-                    n_layers=1, 
+                    hidden_size=100, 
+                    num_layers=2, 
                     device=args.device,
                     verbose=args.verbose
                     )

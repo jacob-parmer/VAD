@@ -12,43 +12,49 @@ import numpy as np
 
 from src.time_logs import TimerLog
 
+from pudb import set_trace
+
 class RNN(nn.Module):
 
-    def __init__(self, input_size, output_size, hidden_dim, n_layers, device, verbose=False):
+    def __init__(self, input_size, hidden_size, num_layers, device, verbose=False):
         super(RNN, self).__init__()
 
         self.device = device
         self.to(self.device)
+        self.hidden_size = hidden_size
+        self.num_layers = num_layers
         self.verbose = verbose
+
         if self.verbose:
             print(f'Using {self.device} device')
         
 
-        # Define params
-        self.hidden_dim = hidden_dim
-        self.n_layers = n_layers
+        self.relu = nn.LeakyReLU()
 
-        # Define layers
-        self.rnn = nn.RNN(input_size, hidden_dim, n_layers, batch_first=True)
-        self.fc = nn.Linear(hidden_dim, output_size)
+        #self.hidden = self.init_hidden()
+        self.rnn = nn.LSTM(input_size=input_size, hidden_size=hidden_size, num_layers=num_layers)
+
+        self.lin1 = nn.Linear(hidden_size, 26)
+        self.lin2 = nn.Linear(26, 2)
+
+        self.softmax = nn.Softmax(dim=1)
 
     def forward(self, x):
+
+        self.hidden = self.init_hidden(x.size(1))
+        x, _ = self.rnn(x, self.hidden)
         
-        batch_size = x.size(0)
-        hidden = self.init_hidden(batch_size)
+        x = x.contiguous().view(x.size(0), -1)
 
-        out, hidden = self.rnn(x, hidden)
+        x = self.relu(self.lin1(x))
+        x = self.lin2(x)
 
-        out = out.contiguous().view(-1, self.hidden_dim)
-
-        return out, hidden
+        return self.softmax(x)
 
     def init_hidden(self, batch_size):
-        hidden = torch.zeros(self.n_layers, batch_size, self.hidden_dim).to(self.device)
-        return hidden
-
-    def export_model(self):
-        return
+        h = torch.zeros(self.num_layers, batch_size, self.hidden_size).to(self.device)
+        c = torch.zeros(self.num_layers, batch_size, self.hidden_size).to(self.device)
+        return h, c
 
     def train(self, X, y, epochs=100, lrate=0.01, verbose=False):
 
@@ -64,11 +70,15 @@ class RNN(nn.Module):
             for i in range(len(X)):
                 target_seq = y[i]
                 optimizer.zero_grad()
-                output, hidden = self(X[i])
+                output = self(X[i])
                 target_seq = target_seq.to(self.device)
                 loss = criterion(output, target_seq.view(-1).long())
                 loss.backward()
                 optimizer.step()
+
+                if i == len(X)-1 and verbose:
+                    print(f"Sample Output:\n{np.argmax(output.detach().numpy(), axis=1)}")
+                    print(f"Targets:\n{target_seq}")
 
             if verbose:
                 print(f"epoch: {epoch}/{epochs}")
