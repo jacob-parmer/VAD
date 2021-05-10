@@ -29,14 +29,14 @@ class Signal:
             pad = (1,pad_size) 
             padded_waveform = torch.nn.functional.pad(self.waveform, pad, "constant", 0)
 
-        self.waveform = torch.reshape(padded_waveform, (-1, frame_size))
+        self.split_waveform = torch.reshape(padded_waveform, (-1, frame_size))
         return
 
     # ------------------------- FEATURE EXTRACTIONS --------------------------- #
-    def get_MFCC(self, n_fft=256, win_length=None, hop_length=512, n_mels=160, n_mfcc=160, verbose=False):
+    def get_MFCC(self, hop_length, n_fft=2048, win_length=None, n_mels=256, n_mfcc=256, verbose=False):
         mfcc_transform = T.MFCC(sample_rate=self.sample_rate,
                                 n_mfcc=n_mfcc,
-                                melkwargs={'n_fft':n_fft, 'n_mels':n_mels, 'hop_length':hop_length}
+                                melkwargs={'n_fft':n_fft, 'n_mels':n_mels, 'hop_length': hop_length}
                                 )
 
         mfcc = mfcc_transform(self.waveform)

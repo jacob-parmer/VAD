@@ -13,6 +13,7 @@ import matplotlib.pyplot as plt
 import os
 import webrtcvad
 import pandas
+import math
 
 from src.time_logs import TimerLog
 from src.signals import Signal
@@ -70,8 +71,12 @@ class LibriSpeech:
         features = []
         for i, data in enumerate(self.dataset):
             sig = Signal(data[0], data[1])
-            sig.split_into_frames(frame_size=int(sig.sample_rate * (FRAME_SIZE_MS / 1000.0))) # webrtc only supports 10, 20, 30 ms frames
-            sig_features = sig.get_MFCC().transpose(2,0).transpose(1,2)
+
+            frame_size = int(sig.sample_rate * (FRAME_SIZE_MS / 1000.0))
+            hop_length = math.ceil(sig.waveform.size(1) / frame_size)
+
+            sig.split_into_frames(frame_size=frame_size) # webrtc only supports 10, 20, 30 ms frames
+            sig_features = sig.get_MFCC(hop_length=frame_size).transpose(2,0).transpose(1,2)
 
             features.append(sig_features)
 
@@ -99,7 +104,7 @@ class LibriSpeech:
 
             sig.split_into_frames(frame_size=int(sig.sample_rate * (FRAME_SIZE_MS / 1000.0))) # webrtc only supports 10, 20, 30 ms frames
 
-            labels = [1 if vad.is_speech(np.int16(f * 32768).tobytes(), sample_rate=sig.sample_rate) else 0 for f in sig.waveform]
+            labels = [1 if vad.is_speech(np.int16(f * 32768).tobytes(), sample_rate=sig.sample_rate) else 0 for f in sig.split_waveform]
 
             # Write labels to .csv files
             file_label_dir = label_dir + "/" + str(self.dataset[i][3]) + "/" + str(self.dataset[i][4])
