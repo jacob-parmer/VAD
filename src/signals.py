@@ -11,7 +11,6 @@ import torch
 import torchaudio
 import torchaudio.functional as F
 import torchaudio.transforms as T
-import matplotlib.pyplot as plt
 
 class Signal:
 

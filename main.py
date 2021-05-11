@@ -3,24 +3,20 @@
 ###
 ### Created: Mar 20, 2021
 """
-
-from src.signals import Signal
-from src.display import Display
-from src.model import RNN
-from src.time_logs import TimerLog
-from src.data import LibriSpeech, build_librispeech
-
-import torch
-from torch import nn
-
 import argparse
 import os
 import builtins
 
-from pudb import set_trace
+import torch
+
+from src.signals import Signal
+from src.model import RNN
+from src.time_logs import TimerLog
+from src.data import LibriSpeech, build_librispeech
 
 N_MELS = 256
 MODEL_NAME = "model/RNN.pt"
+
 
 # Displays time in program before every print statement.
 _print = print
@@ -84,8 +80,6 @@ def main(args):
                 print(f"Dataset: {key}")
 
             model.test(librispeech[key], verbose=args.verbose)          
-
-
 
     else:
         raise ValueError("Invalid mode selected. Please use CLI parameter '-m training' or '-m testing'")

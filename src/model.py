@@ -3,16 +3,10 @@
 ###
 ### Created: Mar 20, 2021
 """
-import os
 import torch
 from torch import nn
-from torch.utils.data import DataLoader
-
-import numpy as np
 
 from src.time_logs import TimerLog
-
-from pudb import set_trace
 
 class RNN(nn.Module):
 
@@ -80,7 +74,7 @@ class RNN(nn.Module):
                     print(f"Loss: {loss.item():.5}")
                     if i % len(X) == 0:
                         print(f"Sample Output:\n{torch.argmax(output, dim=1)}")
-                        print(f"Targets:\n{target_seq}")
+                        print(f"Targets:\n{y}")
 
             if verbose:
                 print(f"epoch: {epoch}/{epochs}")
@@ -118,7 +112,7 @@ class RNN(nn.Module):
                 print(f"#{i}/{len(librispeech.dataset)}")
                 print(f"Correct classifications: {accuracy}")
                 print(f"Total classifications: {total_classifications}")
-                
+
         accuracy = accuracy / total_classifications
         FRR = FRR / total_classifications
         FAR = FAR / total_classifications
