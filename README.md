@@ -3,15 +3,17 @@
 This is an implementation of a Vocal Activity Detector using PyTorch.
 In this, a Recurrent Neural Network (RNN) classifies frames of audio data into speech (1) or not-speech (0).
 
-# Installation
+## Installation
 
-# Running the program
+### Requirements
 
-# Results
+## Running the program
 
-# To-do list
+## Results
 
-# References
+## To-do list / Known Issues
+
+## References
 Here are some resources that I commonly referenced when working on this:
 
 http://karpathy.github.io/2015/05/21/rnn-effectiveness/
