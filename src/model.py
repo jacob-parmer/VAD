@@ -19,6 +19,7 @@ class RNN(nn.Module):
     def __init__(self, input_size, hidden_size, num_layers, device, verbose=False):
         super(RNN, self).__init__()
 
+        self.input_size = input_size
         self.device = device
         self.to(self.device)
         self.hidden_size = hidden_size
@@ -28,10 +29,8 @@ class RNN(nn.Module):
         if self.verbose:
             print(f'Using {self.device} device')
         
+        self.relu = nn.Tanh()
 
-        self.relu = nn.LeakyReLU()
-
-        #self.hidden = self.init_hidden()
         self.rnn = nn.LSTM(input_size=input_size, hidden_size=hidden_size, num_layers=num_layers)
 
         self.lin1 = nn.Linear(hidden_size, 26)
@@ -56,7 +55,7 @@ class RNN(nn.Module):
         c = torch.zeros(self.num_layers, batch_size, self.hidden_size).to(self.device)
         return h, c
 
-    def train(self, X, y, epochs=100, lrate=0.01, verbose=False):
+    def train(self, librispeech, epochs=10, lrate=0.01, verbose=False):
 
         timer = TimerLog()
 
@@ -67,28 +66,28 @@ class RNN(nn.Module):
         optimizer = torch.optim.Adam(self.parameters(), lr=lrate)
         
         for epoch in range(1, epochs+1):
-            for i in range(len(X)):
-                target_seq = y[i]
+            for i in range(len(librispeech.dataset)):
+                X, y = librispeech.load_data(i, n_mels=self.input_size, n_mfcc=self.input_size)
+                target_seq = y
                 optimizer.zero_grad()
-                output = self(X[i])
+                output = self(X)
                 target_seq = target_seq.to(self.device)
                 loss = criterion(output, target_seq.view(-1).long())
                 loss.backward()
                 optimizer.step()
 
-                if i == len(X)-1 and verbose:
-                    print(f"Sample Output:\n{np.argmax(output.detach().numpy(), axis=1)}")
-                    print(f"Targets:\n{target_seq}")
+                if verbose:
+                    print(f"#{i}/{len(librispeech.dataset)}")
+                    print(f"Loss: {loss.item():.5}")
+                    if i % len(X) == 0:
+                        print(f"Sample Output:\n{torch.argmax(output, dim=1)}")
+                        print(f"Targets:\n{target_seq}")
 
             if verbose:
                 print(f"epoch: {epoch}/{epochs}")
                 print(f"Loss: {loss.item():.5}")
 
-        for line in output:
-            np_line = line.detach().numpy()
-            print(np.argmax(np_line, axis=0))
-
         if verbose:
-            print(f"Finished model training in {timer.get_elapsed()} seconds.")
+            print(f"Finished model training for {librispeech.name} in {timer.get_elapsed()} seconds.")
 
         return

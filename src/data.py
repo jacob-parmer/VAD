@@ -32,62 +32,31 @@ class LibriSpeech:
                             folder_in_archive=folder_in_archive,
                             download=download
                         )
-        
+        self.name = url
         if not os.path.exists(self.dataset._path):
             raise RuntimeError(
                 "Dataset not found. Please use 'download=True' to download it."
             )
 
-        self.dataloader = DataLoader(self.dataset, batch_size=batch_size, shuffle=shuffle)
         self.labels = []
 
-    def get_labels(self, dataset_name, verbose=False):
+    def load_data(self, index, n_mels, n_mfcc):
 
-        label_dir = os.getcwd() + "/LibriSpeech/labels/" + dataset_name
+        # 1. Get MFCC features from data at index
+        data = Signal(self.dataset[index][0], self.dataset[index][1])
+        frame_size = int(data.sample_rate * (FRAME_SIZE_MS / 1000.0))
 
-        if verbose:
-            print(f"Reading labels from dataset {dataset_name}")
+        data.split_into_frames(frame_size=frame_size) # webrtc only supports 10, 20, 30 ms frames
+        X = data.get_MFCC(hop_length=frame_size, n_mels=n_mels, n_mfcc=n_mfcc).transpose(2,0).transpose(1,2)
 
-        for i in range(len(self.dataset)):
-            file_label_dir = label_dir + "/" + str(self.dataset[i][3]) + "/" + str(self.dataset[i][4])
-            file_name = file_label_dir + f"/{self.dataset[i][3]}-{self.dataset[i][4]}-{str(self.dataset[i][5]).zfill(4)}.csv"
+        # 2. Get labels for each frame in MFCC features
+        label_dir = label_dir = os.getcwd() + "/LibriSpeech/labels/" + self.name # I think this will break on windows? Checking needed.
+        file_dir = label_dir + "/" + str(self.dataset[index][3]) + "/" + str(self.dataset[index][4])
+        file_name = file_dir + f"/{self.dataset[index][3]}-{self.dataset[index][4]}-{str(self.dataset[index][5]).zfill(4)}.csv"
 
-            labels_tensor = torch.tensor(pandas.read_csv(file_name, delimiter=",", header=None).values)
-            self.labels.append(labels_tensor)
+        y = torch.tensor(pandas.read_csv(file_name, delimiter=",", header=None).values)
 
-            if verbose:
-                print(f"Reading labels... {i}/{len(self.dataset)}")
-
-        return self.labels
-
-    def get_features(self, device, verbose=False):
-
-        timer = TimerLog()
-
-        if verbose:
-            print("Starting Feature Extraction...")
-
-        dataset_size = len(self.dataset)
-        features = []
-        for i, data in enumerate(self.dataset):
-            sig = Signal(data[0], data[1])
-
-            frame_size = int(sig.sample_rate * (FRAME_SIZE_MS / 1000.0))
-            hop_length = math.ceil(sig.waveform.size(1) / frame_size)
-
-            sig.split_into_frames(frame_size=frame_size) # webrtc only supports 10, 20, 30 ms frames
-            sig_features = sig.get_MFCC(hop_length=frame_size).transpose(2,0).transpose(1,2)
-
-            features.append(sig_features)
-
-            if verbose:
-                print(f"#{i}/{dataset_size}")
-                sig.print_stats()
-        
-        if verbose:
-            print(f"Finished Feature Extraction. Total Time Elapsed: {timer.get_elapsed()}")
-
-        return features
+        return X, y
 
     # -------- PRIVATE MEMBERS ----------- #
     def _label_data(self, dataset_name, verbose=False):
@@ -126,19 +95,23 @@ class LibriSpeech:
         return
 
 
-def build_librispeech(verbose=False):
+def build_librispeech(mode, verbose=False):
 
     if verbose:
         print("Loading LibriSpeech Data...")
         print("If LibriSpeech is not already downloaded, this might take a while...")
 
     librispeech = {}
-    download_names = ["dev-clean", "dev-other", "test-clean", "test-other", "train-clean-100",
-                        "train-clean-360"] # READD , "train-other-500" LATER
+    if mode == 'training':
+        datasets = ["dev-clean", "dev-other", "train-clean-100", "train-clean-360"]
+    elif mode == 'testing':
+        datasets = ["test-clean", "test-other"]
+    else:
+        raise ValueError("Invalid mode selected. Please use CLI parameter '-m training' or '-m testing'")
 
-    
-    for name in download_names:
-        # 1. Creates dictionary of librispeech objects, each corresponding to data in LibriSpeech/ folder    
+
+    for name in datasets:
+        # 1. Creates dictionary of librispeech objects, each corresponding to data in LibriSpeech/ folder
         librispeech[name] = LibriSpeech(
                                 root=os.getcwd(),
                                 url=name,
@@ -149,7 +122,6 @@ def build_librispeech(verbose=False):
         # 2. Labels librispeech data if labels don't already exist
         if not os.path.exists(os.getcwd() + "/LibriSpeech/labels/" + name):
             librispeech[name]._label_data(dataset_name=name, verbose=verbose)
-
 
     if verbose:
         print("Done!")
