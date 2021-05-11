@@ -29,7 +29,7 @@ class RNN(nn.Module):
         if self.verbose:
             print(f'Using {self.device} device')
         
-        self.relu = nn.Tanh()
+        self.relu = nn.LeakyReLU()
 
         self.rnn = nn.LSTM(input_size=input_size, hidden_size=hidden_size, num_layers=num_layers)
 
@@ -68,11 +68,10 @@ class RNN(nn.Module):
         for epoch in range(1, epochs+1):
             for i in range(len(librispeech.dataset)):
                 X, y = librispeech.load_data(i, n_mels=self.input_size, n_mfcc=self.input_size)
-                target_seq = y
                 optimizer.zero_grad()
                 output = self(X)
-                target_seq = target_seq.to(self.device)
-                loss = criterion(output, target_seq.view(-1).long())
+
+                loss = criterion(output, y.view(-1).long())
                 loss.backward()
                 optimizer.step()
 
@@ -85,9 +84,45 @@ class RNN(nn.Module):
 
             if verbose:
                 print(f"epoch: {epoch}/{epochs}")
-                print(f"Loss: {loss.item():.5}")
 
         if verbose:
             print(f"Finished model training for {librispeech.name} in {timer.get_elapsed()} seconds.")
 
         return
+
+    def test(self, librispeech, verbose=False):
+
+        total_classifications = 0
+        accuracy = 0
+        FRR = 0
+        FAR = 0
+
+        for i in range(len(librispeech.dataset)):
+            X, y = librispeech.load_data(i, n_mels=self.input_size, n_mfcc=self.input_size)
+            y = y.view(-1)
+
+            output = self(X)
+
+            for j, frame in enumerate(output):
+                total_classifications += 1
+                prediction = torch.argmax(frame)
+
+                if prediction == y[j]:
+                    accuracy += 1
+                elif prediction == 0 and y[j] == 1:
+                    FRR += 1
+                elif prediction == 1 and y[j] == 0:
+                    FAR += 1
+
+            if verbose:
+                print(f"#{i}/{len(librispeech.dataset)}")
+                print(f"Correct classifications: {accuracy}")
+                print(f"Total classifications: {total_classifications}")
+                
+        accuracy = accuracy / total_classifications
+        FRR = FRR / total_classifications
+        FAR = FAR / total_classifications
+
+        print(f"Accuracy over test dataset {librispeech.name}: {accuracy:.4f}")
+        print(f"False Rejection Rate (FRR): {FRR:.4f}")
+        print(f"False Acceptance Rate (FAR): {FAR:.4f}")
