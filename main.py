@@ -20,6 +20,7 @@ import builtins
 from pudb import set_trace
 
 N_MELS = 256
+MODEL_NAME = "model/RNN.pt"
 
 # Displays time in program before every print statement.
 _print = print
@@ -54,19 +55,19 @@ def main(args):
                     verbose=args.verbose
                     )
 
-        #for key in librispeech:
+        for key in librispeech:
 
-            #if args.verbose:
-                #print(f"Dataset: {key}")
+            if args.verbose:
+                print(f"Dataset: {key}")
 
-        model.train(librispeech["dev-clean"], epochs=args.epochs, lrate=args.lrate, verbose=args.verbose)          
+            model.train(librispeech[key], epochs=args.epochs, lrate=args.lrate, verbose=args.verbose)          
 
-        output_filename = "model/RNN.pt"
+        output_filename = ""
         if args.verbose:
             print(f"Success! Finished training in {stopwatch.get_elapsed()} seconds.")
-            print(f"Saving model to {output_filename}")
+            print(f"Saving model to {MODEL_NAME}")
 
-        torch.save(model, output_filename)
+        torch.save(model, MODEL_NAME)
 
 
     # ----- TEST ----- #
@@ -75,13 +76,16 @@ def main(args):
             print("Beginning VAD model testing...")
             print("------------------------------")
 
-        model = RNN(input_size=features.size(2),
-                    output_size=1,
-                    hidden_dim=2,
-                    n_layers=1,
-                    device=args.device,
-                    verbose=args.verbose
-                    )
+        model = torch.load(MODEL_NAME)
+
+        for key in librispeech:
+
+            if args.verbose:
+                print(f"Dataset: {key}")
+
+            model.test(librispeech[key], verbose=args.verbose)          
+
+
 
     else:
         raise ValueError("Invalid mode selected. Please use CLI parameter '-m training' or '-m testing'")
@@ -94,7 +98,7 @@ if __name__ == "__main__":
     parser.add_argument("--timed", "-t", action="store_true", help="Display execution time in debugging logs")
     parser.add_argument("--mode", "-m",  help="Set program to training or testing mode")
     parser.add_argument("--lrate", "-l", default=0.01, type=float, help="Set learning rate for model")
-    parser.add_argument("--epochs", "-e", default=10, type=int, help="Set number of epochs for model training")
+    parser.add_argument("--epochs", "-e", default=1, type=int, help="Set number of epochs for model training")
     parser.add_argument("--device", "-d", default='cuda' if torch.cuda.is_available() else 'cpu', help="Set program to run on CPU or GPU")
     args = parser.parse_args()
 
