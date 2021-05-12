@@ -4,15 +4,13 @@
 ### Created: Mar 20, 2021
 """
 import argparse
-import os
 import builtins
 
 import torch
 
-from src.signals import Signal
 from src.model import RNN
 from src.time_logs import TimerLog
-from src.data import LibriSpeech, build_librispeech
+from src.data import build_librispeech
 
 N_MELS = 256
 MODEL_NAME = "model/RNN.pt"
@@ -52,13 +50,11 @@ def main(args):
                     )
 
         for key in librispeech:
-
             if args.verbose:
                 print(f"Dataset: {key}")
 
             model.train(librispeech[key], epochs=args.epochs, lrate=args.lrate, verbose=args.verbose)          
 
-        output_filename = ""
         if args.verbose:
             print(f"Success! Finished training in {stopwatch.get_elapsed()} seconds.")
             print(f"Saving model to {MODEL_NAME}")
@@ -75,7 +71,6 @@ def main(args):
         model = torch.load(MODEL_NAME)
 
         for key in librispeech:
-
             if args.verbose:
                 print(f"Dataset: {key}")
 

@@ -4,23 +4,41 @@
 ### Created: Mar 31, 2021
 """
 
-# Source: https://pytorch.org/tutorials/beginner/audio_preprocessing_tutorial.html#feature-extractions
-
 import librosa
 import torch
-import torchaudio
 import torchaudio.functional as F
 import torchaudio.transforms as T
+import matplotlib.pyplot as plt
 
 class Signal:
+    """
+    Represents an audio signal.
+    """
 
     def __init__(self, waveform, sample_rate):
+        """
+        Initializes the audio signal, with both waveform and sample rate data.
+
+        Params:
+            (tensor) waveform: [1, length] tensor representative of audio data
+            (int) sample_rate: Self explanatory
+        """
+
         self.waveform = waveform
         self.sample_rate = sample_rate
         return
 
     def split_into_frames(self, frame_size=1024):
-        
+        """
+        Splits the audio signal into discrete segments. This is primarily for ease of labelling the data.
+        Has to pad the last bit of the waveform so that it has a consistent size to the other frames.
+
+        Params:
+            (int) frame_size: Self explanatory
+
+        Returns:
+            (tensor) torch.reshape(padded_waveform, (-1, frame_size)): 2d representation of waveform with shape [?, ?]
+        """
         tot_length = self.waveform.size(1)
         pad_size = (frame_size - (tot_length % frame_size)) - 1 # For some reason functional.pad adds pad_size+1, so -1 here (hacky solution, fix later?)
 
@@ -28,10 +46,14 @@ class Signal:
             pad = (1,pad_size) 
             padded_waveform = torch.nn.functional.pad(self.waveform, pad, "constant", 0)
 
-        self.split_waveform = torch.reshape(padded_waveform, (-1, frame_size))
-        return
+        return torch.reshape(padded_waveform, (-1, frame_size))
 
     # ------------------------- FEATURE EXTRACTIONS --------------------------- #
+    """
+        Not going to write out in-depth comments on the rest of these functions,
+        since they were largely copy-pasted and much more information could be found at:
+        https://pytorch.org/tutorials/beginner/audio_preprocessing_tutorial.html#feature-extractions
+    """
     def get_MFCC(self, hop_length, n_fft=2048, win_length=None, n_mels=256, n_mfcc=256, verbose=False):
         mfcc_transform = T.MFCC(sample_rate=self.sample_rate,
                                 n_mfcc=n_mfcc,

@@ -7,20 +7,29 @@
 import time
 
 class TimerLog:
+    """
+    Shows information on run-time since object creation or start() function call.
+    A glorified stopwatch.
+    """
 
-    def __init__(self, verbose=True):
+    def __init__(self):
+        """
+        Initializes timing object, with timer and time_created set to creation system time.
+        """
+
         self.time_created = time.time()
         self.timer = time.time()
-        self.verbose = verbose
 
     def start(self):
+        """
+        Sets timer to current system time.
+        """
         self.timer = time.time()
 
-    def stop(self, help_text):
-        elapsed = time.time() - self.timer
-        if self.verbose:
-            print(f"{help_text} {elapsed} seconds")
-
     def get_elapsed(self):
+        """
+        Gets amount of time past since object creation or last start() call by finding difference
+        between current system time and start time.
+        """
         return time.time() - self.timer
         
