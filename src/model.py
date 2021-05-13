@@ -7,6 +7,7 @@ import torch
 from torch import nn
 
 from src.time_logs import TimerLog
+from src.display import Display
 
 class RNN(nn.Module):
     """
@@ -43,7 +44,7 @@ class RNN(nn.Module):
         if self.verbose:
             print(f'Using {self.device} device')
         
-        self.relu = nn.LeakyReLU()
+        self.act = nn.Tanh()
 
         self.rnn = nn.LSTM(input_size=input_size, hidden_size=hidden_size, num_layers=num_layers)
 
@@ -68,7 +69,7 @@ class RNN(nn.Module):
         
         x = x.contiguous().view(x.size(0), -1)
 
-        x = self.relu(self.lin1(x))
+        x = self.act(self.lin1(x))
         x = self.lin2(x)
 
         return self.softmax(x)
@@ -151,13 +152,16 @@ class RNN(nn.Module):
         accuracy = 0
         FRR = 0
         FAR = 0
+        # disp = Display()
 
         for i in range(len(librispeech.dataset)):
             X, y = librispeech.load_data(i, n_mels=self.input_size, n_mfcc=self.input_size)
             y = y.view(-1)
-
+            
             output = self(X)
 
+            # Uncomment the commented lines if you want nice pretty plots to look at.
+            # labels = []
             for j, frame in enumerate(output):
                 total_classifications += 1
                 prediction = torch.argmax(frame)
@@ -168,6 +172,11 @@ class RNN(nn.Module):
                     FRR += 1
                 elif prediction == 1 and y[j] == 0:
                     FAR += 1
+
+                # labels.append(prediction)
+
+            # labels = torch.Tensor(labels)
+            # disp.plot_waveform(librispeech.dataset[i][0], librispeech.dataset[i][1], labels)
 
             if verbose:
                 print(f"#{i}/{len(librispeech.dataset)}")

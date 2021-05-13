@@ -161,4 +161,3 @@ def _plot_kaldi_pitch(waveform, sample_rate, pitch, nfcc):
     labels = [l.get_label() for l in lns]
     axis.legend(lns, labels, loc=0)
     plt.show()
-
