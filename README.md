@@ -8,6 +8,13 @@ For example, if trying to do speech-recognition, it might be useful to just drop
 
 ## Installation
 
+#### TL;DR
+
+> git clone https://github.com/jacob-parmer/VAD.git
+> 
+> pip install -r requirements.txt
+
+### Files
 To create the working directory:
 
 > git clone https://github.com/jacob-parmer/VAD.git
