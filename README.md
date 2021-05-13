@@ -12,7 +12,7 @@ For example, if trying to do speech-recognition, it might be useful to just drop
 
 > git clone https://github.com/jacob-parmer/VAD.git
 > 
-> cd VAD
+> cd VAD/
 > 
 > pip install -r requirements.txt
 
