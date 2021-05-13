@@ -15,8 +15,6 @@ from src.data import build_librispeech
 N_MELS = 256
 MODEL_NAME = "model/RNN.pt"
 
-
-# Displays time in program before every print statement.
 _print = print
 stopwatch = TimerLog()
 
@@ -43,7 +41,7 @@ def main(args):
             print("-------------------------------")
 
         model = RNN(input_size=N_MELS,
-                    hidden_size=10, 
+                    hidden_size=100, 
                     num_layers=1, 
                     device=args.device,
                     verbose=args.verbose
@@ -75,6 +73,7 @@ def main(args):
                 print(f"Dataset: {key}")
 
             model.test(librispeech[key], verbose=args.verbose)          
+
 
     else:
         raise ValueError("Invalid mode selected. Please use CLI parameter '-m training' or '-m testing'")

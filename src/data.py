@@ -98,7 +98,7 @@ class LibriSpeech:
             print("Beginning VAD labeling...")
             print("-------------------------")
 
-        vad = webrtcvad.Vad(3)
+        vad = webrtcvad.Vad(1)
 
         label_dir = os.getcwd() + "/LibriSpeech/labels/" + dataset_name
 
@@ -147,7 +147,7 @@ def build_librispeech(mode, verbose=False):
 
     librispeech = {}
     if mode == 'training':
-        datasets = ["train-other-500", "train-clean-360"] # Extras to add? "train-clean-100", "dev-clean", "dev-other"
+        datasets = ["dev-clean", "dev-other"] # Not added - "train-clean-100", "train-clean-360", "train-other-500"
     elif mode == 'testing':
         datasets = ["test-clean", "test-other"]
     else:
