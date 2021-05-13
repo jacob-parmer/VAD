@@ -152,17 +152,16 @@ class RNN(nn.Module):
         accuracy = 0
         FRR = 0
         FAR = 0
-        #disp = Display()
+        # disp = Display()
 
         for i in range(len(librispeech.dataset)):
             X, y = librispeech.load_data(i, n_mels=self.input_size, n_mfcc=self.input_size)
             y = y.view(-1)
-
-            # Uncomment this if you want nice pretty plots to look at.
-            #disp.plot_waveform(librispeech.dataset[i][0], librispeech.dataset[i][1], y)
             
             output = self(X)
 
+            # Uncomment the commented lines if you want nice pretty plots to look at.
+            # labels = []
             for j, frame in enumerate(output):
                 total_classifications += 1
                 prediction = torch.argmax(frame)
@@ -173,6 +172,11 @@ class RNN(nn.Module):
                     FRR += 1
                 elif prediction == 1 and y[j] == 0:
                     FAR += 1
+
+                # labels.append(prediction)
+
+            # labels = torch.Tensor(labels)
+            # disp.plot_waveform(librispeech.dataset[i][0], librispeech.dataset[i][1], labels)
 
             if verbose:
                 print(f"#{i}/{len(librispeech.dataset)}")
