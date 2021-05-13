@@ -68,6 +68,8 @@ For a more complete view of the success of the model, the overall accuracy, fals
 
 [ ] Better handle feature / model shapes. Some of these are weird.
 
+[ ] Make timed print work with breakpoints
+
 
 ## References
 Here are some resources that I commonly referenced when working on this:
