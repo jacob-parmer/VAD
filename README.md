@@ -54,7 +54,7 @@ The following is a sample audio signal with overlapping labels. Where labels are
 
 It's definitely not flawless, but it does an alright job. I think it could improve with some more in-depth training, and possibly some pre-processing of the signal on the front-end. 
 
-For a more complete view of the success of the model, the overall accuracy, false rejection rate, and false acceptance rate, were found using both clean and noisy test datasets provided by LibriSpeech. As one might expect, the model struggled more with noisy data, but not to a super significant degree.
+For further analysis, the overall accuracy, false rejection rate, and false acceptance rate, were found using both clean and noisy test datasets provided by LibriSpeech. As one might expect, the model struggled more with noisy data, but not to a super significant degree.
 
 ![Testing](/images/results.png)
 
@@ -68,7 +68,7 @@ For a more complete view of the success of the model, the overall accuracy, fals
 
 [ ] Dockerize / Makefile the application
 
-[ ] Better handle feature / model shapes. Some of these are weird.
+[ ] Find missing tensor shapes for [?,?] comments, and maybe make some of these less weird.
 
 [ ] Make timed print work with breakpoints
 
