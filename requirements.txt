@@ -5,3 +5,4 @@ matplotlib==3.3.3
 webrtcvad==2.0.10
 pandas==1.2.3
 numpy==1.18.5
+numba==0.48
